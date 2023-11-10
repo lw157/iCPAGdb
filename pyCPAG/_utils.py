@@ -283,7 +283,7 @@ def ld_clump(idat, args):
     if not (os.path.isfile(b_file + ".bed") and os.path.isfile(b_file + ".bim") and os.path.isfile(b_file + ".fam")):
         sys.exit("1KG reference {} bim/bed/fam does not exist in db/lddat folder.".format(str(b_file)))
 
-    sys.stdout.write("Performing LD clumping for usr GWAS uploaded data ...\n\n")
+    sys.stdout.write("LD clumping ...\n")
 
     if args.snpcol not in idat.columns:
         sys.exit(" {} is not a valid column name for SNP rsID.".format(str(args.snpcol)))
@@ -298,7 +298,7 @@ def ld_clump(idat, args):
     if tmpidat.shape[0] > 0:
         tmpidat.to_csv(tmpfile, sep='\t', index=False)
     else:
-        sys.exit("Please use '--SNPcol' and '--Pcol' to choose columns for SNP rsID and p value.")
+        sys.exit("No SNPs is left. Please use '--SNPcol' and '--Pcol' to choose columns for SNP rsID and p value, or relax P cutoff with '--usr-pcut'.")
 
     cmd1 = [plink_bin, "--bfile", b_file,
             "--clump", tmpfile,
@@ -323,7 +323,7 @@ def ld_clump(idat, args):
         resclump['SNP'].to_csv(tmpfile + ".snplist", index=False)
 
         if findat.shape[0] > 0:
-            print("After LD clumping, " + str(findat.shape[0]) + " leading SNPs were kept")
+            print("After LD clumping, " + str(findat.shape[0]) + " leading SNPs were kept\n")
         else:
             print("Skip LD clumping because all SNPs (rsID) are absent in 1000 genome EUR population")
 
@@ -362,8 +362,8 @@ def ld_clump(idat, args):
     for file in os.listdir(os.getcwd()):
         if os.path.isfile(file) and file.startswith(os.path.basename(tmpfile)):
             try:
-                os.remove(file)
-                # continue
+                #os.remove(file)
+                continue
             except:
                 print("Error while deleting file : ", file)
 
