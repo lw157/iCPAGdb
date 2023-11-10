@@ -194,7 +194,7 @@ def gwasdb_cmp(args):
         print(f"Result is saved into {out_pfx} .")
 
 
-def load_dat(files, args):
+def load_dat(files, user_pcut, args):
     """
     :param indir: str. infile dir.
     :param files: str. infiles
@@ -211,11 +211,11 @@ def load_dat(files, args):
     if len(files) > 1:
         for i_file in files:
             if i_file.endswith("gz"):
-                idat_chunk = pd.read_csv(i_file, sep=args.delimitor,  compression='gzip', iterator=True,
-                                         chunksize=100000)
+                idat_chunk = pd.read_csv(i_file, sep=args.delimitor, compression='gzip', iterator=True, chunksize=10000)
             else:
-                idat_chunk = pd.read_csv(i_file, sep=args.delimitor, iterator=True, chunksize=100000)
-            idat1 = pd.concat([chunk[chunk[args.pcol] < float(args.usrpcut)] for chunk in idat_chunk])
+                idat_chunk = pd.read_csv(i_file, sep=args.delimitor, iterator=True, chunksize=10000)
+
+            idat1 = pd.concat([chunk[chunk[args.pcol] < float(user_pcut)] for chunk in idat_chunk])
             idat1.fillna("NA", inplace=True)
 
             if args.ldclump:
@@ -230,7 +230,7 @@ def load_dat(files, args):
         else:
             idat_chunk = pd.read_csv(files[0], sep=args.delimitor,iterator=True, chunksize=100000)
 
-        usr_dat1 = pd.concat([chunk[chunk[args.pcol] <= float(args.usrpcut)] for chunk in idat_chunk])
+        usr_dat1 = pd.concat([chunk[chunk[args.pcol] <= float(user_pcut)] for chunk in idat_chunk])
         # usr_dat1 = pd.read_csv(files[0], sep=args.delimitor)
         usr_dat1.fillna("NA", inplace=True)
 
@@ -241,7 +241,7 @@ def load_dat(files, args):
             dat_dict[files[0]] = usr_dat1[args.snpcol].values.tolist()
 
     if len(dat_dict) < 1:
-        sys.exit("No SNPs were kept after filtering P values of " + str(args.usrpcut))
+        sys.exit("No SNPs were kept after filtering P values of " + str(user_pcut))
     # else:
     #     snplens = [len(v) for k, v in dat_dict.items()]
     #     # snplen = sum(snplens)
@@ -285,27 +285,45 @@ def user_gwas_cmp(args):
     if not args.infile:
         sys.exit("Please choose a input file with --infile")
 
-    if "," in args.infile:
-        my_infiles = args.infile.replace(" ", "").split(",")
-        for ifile in my_infiles:
+    if len(args.infile) > 1:
+        for ifile in args.infile:
             fileexist = check_file(file_dir, ifile)
             if fileexist:
                 all_infiles.append(os.path.join(file_dir, ifile))
-
-    elif "*" in args.infile:
-        for file in os.listdir(args.indir):
-            if fnmatch.fnmatch(file, args.infile):
-                fileexist = check_file(file_dir, file)
-                if fileexist:
-                    all_infiles.append(os.path.join(file_dir, file))
-    else:
-        filexist = check_file(file_dir, args.infile)
+    elif len(args.infile) == 1:
+        filexist = check_file(file_dir, args.infile[0])
         if not filexist:
             sys.exit(" {} file does not exist.".format(str(args.infile)))
             # all_infiles.append(os.path.join(file_dir,args.infile))
-        all_infiles.append(args.infile)
+        all_infiles.append(args.infile[0])
+    else:
+        print(args.infile)
 
-    user_dat, usr_proxysnpdict = load_dat(all_infiles, args)
+    # if "," in args.infile:
+    #     my_infiles = args.infile.replace(" ", "").split(",")
+    #     for ifile in my_infiles:
+    #         print("this is ifile: " + ifile)
+    #         fileexist = check_file(file_dir, ifile)
+    #         if fileexist:
+    #             all_infiles.append(os.path.join(file_dir, ifile))
+    #
+    # elif "*" in args.infile:
+    #     for file in os.listdir(args.indir):
+    #         if fnmatch.fnmatch(file, args.infile):
+    #             fileexist = check_file(file_dir, file)
+    #             if fileexist:
+    #                 all_infiles.append(os.path.join(file_dir, file))
+    # else:
+    #     filexist = check_file(file_dir, args.infile)
+    #     if not filexist:
+    #         sys.exit(" {} file does not exist.".format(str(args.infile)))
+    #         # all_infiles.append(os.path.join(file_dir,args.infile))
+    #     all_infiles.append(args.infile)
+
+    if type(args.usrpcut) == list:
+        sys.exit(f"User should only define a single p cutoff, but there are {len(args.usrpcut)} p cutoff")
+
+    user_dat, usr_proxysnpdict = load_dat(all_infiles, args.usrpcut, args)
 
     pcut = args.pcut
     subtypeall = []
@@ -369,6 +387,66 @@ def user_gwas_cmp(args):
         else:
             outdf.to_csv(out_pfx, index=False)
             print("Result is saved into {}.!".format(out_pfx))
+
+
+def user_gwaslist(args):
+    """
+        allow user to upload two GWAS datasets, and compute the similarity between those 2 GWAS datasets
+        :param args:
+        :return:
+        """
+    if len(sys.argv) == 2:
+        sys.exit(0)
+
+    file_dir = os.getcwd() if args.indir == None else args.indir
+
+    nowdate = datetime.datetime.now()
+    out_postsuffix = str(nowdate.year) + str(nowdate.month) + str(nowdate.day)
+
+    if not os.path.exists(file_dir):
+        sys.exit("Folder {} does not exist" % file_dir)
+
+    if not args.infile:
+        sys.exit("Please define a input file with --infiles")
+
+    snpdat_dict = {}; ldproxysnp_dict = {}
+
+    if len(args.usrpcut) > 1:
+        assert len(args.usrpcut) == len(args.infile), f" at least {len(args.usrpcut)} p cutoff should be defined to match {len(args.infile)} infiles"
+        print("SNPs are filtered using p cutoff " + ", ".join( str(x) for x in args.usrpcut ) + " separately")
+    if len(args.infile) >= 2:
+        for i in range(len(args.infile)):
+            ifile = args.infile[i]
+            if len(args.usrpcut) >1:
+                ipcut = float(args.usrpcut[i])
+            else:
+                ipcut = float(args.usrpcut[0])
+
+            print(f"Working on {os.path.basename(ifile)} ...")
+            fileexist = check_file(file_dir, ifile)
+            if fileexist:
+                i_tmpfile = os.path.join(file_dir, ifile)
+                user_dat, usr_proxysnpdict = load_dat([i_tmpfile],ipcut, args)
+                if len(user_dat) < 1:
+                    sys.exit("After p filtering, no SNPs are left.")
+                snpdat_dict.update(user_dat)
+                ldproxysnp_dict.update(usr_proxysnpdict)
+            else:
+                sys.exit(f"input file {ifile} is not existed!")
+    else:
+        print("Oops, please define 2 or more GWAS sumstats files with --infiles !")
+
+    snpdat_dict = {os.path.basename(k).replace(".txt","").replace(".csv","").replace(".gz",""): v for k, v in snpdat_dict.items()}
+    outdf = intra_trait(snpdat_dict, ncpus=args.cpu, ldpop=args.ldpop, r2cut=args.ldr2, cross_traits=False)
+
+    if not outdf.empty:
+        out_pfx = "./output/" + "cpag_output_usrGWASpcut" + str(args.usrpcut) + "_" + out_postsuffix + ".out.csv"
+        if args.outfile:
+            outdf.to_csv(args.outfile, index=False)
+            print("Results are saved into {}.!".format(args.outfile))
+        else:
+            outdf.to_csv(out_pfx, index=False)
+            print("Results are saved into {}.!".format(out_pfx))
 
 def post_analysis(args):
 
@@ -496,8 +574,8 @@ def main(prog=None):
                                        help='Compare user GWAS against CPAGdb traits. Type -h for more option')
     user_gwas.add_argument('--indir', type=str, dest="indir", default=None,
                            help="input files directory. Default: current folder")
-    user_gwas.add_argument('--infile', type=str, dest="infile",
-                           help="input files, use '--infile A_file.txt, B_file.txt' or "
+    user_gwas.add_argument('--infile', type=str, dest="infile",  nargs='+',
+                           help="input files, use '--infile A_file.txt B_file.txt' or "
                                 "'--infile *_file.txt' for multiple files")
     user_gwas.add_argument('--delimitor', dest="delimitor", default='\t',
                            help="Delimiter to use. e.g. '\t' for tab, ',' for csv, ' ' for white space ")
@@ -536,6 +614,40 @@ def main(prog=None):
     user_gwas.add_argument('-O', '--outfile', type=str, dest="outfile", action="store", default=None,
                            help="output csv file name")
     user_gwas.set_defaults(func=user_gwas_cmp)
+
+    user_gwas = root_parser.add_parser('usr-gwas-list',
+                                       help='Calculate LD-aware SNPs sharing from user multiple GWAS. Type -h for more option')
+    user_gwas.add_argument('--indir', type=str, dest="indir", default=None,
+                           help="input files directory. Default: current folder")
+    user_gwas.add_argument('--infiles', type=str, dest="infile", nargs='+',
+                           help="input files. Use space to separate multiple files, e.g. '--infiles A_file.txt B_file.txt' or "
+                                "'--infiles *_file.txt'")
+    user_gwas.add_argument('--delimitor', dest="delimitor", default='\t',
+                           help="Delimiter for input file. e.g. '\t' for tab, ',' for csv, ' ' for white space ")
+    user_gwas.add_argument('--SNPcol', type=str, dest="snpcol", default='SNP', help="SNP rsID column name in the file")
+    user_gwas.add_argument('--Pcol', type=str, dest="pcol", default='P',
+                           help="Column name for p value")  # action='store_true')
+    user_gwas.add_argument('--usr-pcut', type=float, dest="usrpcut", default=1e-5, nargs='+',
+                           help="P cutoff for GWAS, e.g. 1e-7 or '1e-5 1e-7' for multiple p cutoff. Default: 1e-5")
+    user_gwas.add_argument('--ld-clump', type=float, dest="ldclump", default=1,
+                           help="perform LD clumping, choose [1/0]. Default: 1")
+    user_gwas.add_argument('--lddb-pop', type=str, dest="ldpop", default="EUR",
+                           help="Population used for LD clumping, default: 'EUR', available for ['EUR', 'AFR', 'EAS'] ")
+    user_gwas.add_argument('--lddb-r2', type=float, dest="ldr2", default=0.4,
+                           help="LD database, default: '0.4', available for [0.2, 0.4, 0.8] ")
+    user_gwas.add_argument('--ld-clump-p1', type=float, dest="ldclump_p1", default=1e-5,
+                           help="parameters for LD clumping p1, default: 1e-5")
+    user_gwas.add_argument('--ld-clump-p2', type=float, dest="ldclump_p2", default=1,
+                           help="parameters for LD clumping p2, default: 1")
+    user_gwas.add_argument('--ld-clump-r2', type=float, dest="ldclump_r2", default=0.4,
+                           help="LD clump r-squared cutoff, default: 0.4")
+    user_gwas.add_argument('--ld-clump-kb', type=float, dest="ldclump_kb", default=5000,
+                           help="LD clump window size, default: 5000")
+    user_gwas.add_argument('--threads', type=int, dest="cpu", action="store", default=1,
+                           help="Set multiple CPUs/threads. Default: 1")
+    user_gwas.add_argument('-O', '--outfile', type=str, dest="outfile", action="store", default=None,
+                           help="output csv file name")
+    user_gwas.set_defaults(func=user_gwaslist)
 
     post_parser = root_parser.add_parser('post_analysis', help='post analysis for heatmap/ontology. Not full developed yet')
     post_parser.add_argument("--heatmap", dest='heatmap', action='store_true', help = "plot heatmap")
