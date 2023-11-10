@@ -414,6 +414,9 @@ def user_gwaslist(args):
     if len(args.usrpcut) > 1:
         assert len(args.usrpcut) == len(args.infile), f" at least {len(args.usrpcut)} p cutoff should be defined to match {len(args.infile)} infiles"
         print("SNPs are filtered using p cutoff " + ", ".join( str(x) for x in args.usrpcut ) + " separately")
+    else:
+        print("SNPs are filtered using p cutoff " + ", ".join(str(x) for x in args.usrpcut) + "")
+
     if len(args.infile) >= 2:
         for i in range(len(args.infile)):
             ifile = args.infile[i]
@@ -440,7 +443,7 @@ def user_gwaslist(args):
     outdf = intra_trait(snpdat_dict, ncpus=args.cpu, ldpop=args.ldpop, r2cut=args.ldr2, cross_traits=False)
 
     if not outdf.empty:
-        out_pfx = "./output/" + "cpag_output_usrGWASpcut" + str(args.usrpcut) + "_" + out_postsuffix + ".out.csv"
+        out_pfx = "./output/" + "cpag_output_usrGWASpcut" + "and".join( str(x) for x in args.usrpcut ) + "_" + out_postsuffix + ".out.csv"
         if args.outfile:
             outdf.to_csv(args.outfile, index=False)
             print("Results are saved into {}.!".format(args.outfile))
