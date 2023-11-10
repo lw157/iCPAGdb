@@ -4,14 +4,14 @@
 from __future__ import generators
 
 __author__ = "Liuyang Wang (wallacewly@gmail.com)"
-__copyright__ = "Copyright (C) 2020 Liuyang Wang"
+__copyright__ = "Copyright (C) 2023 Liuyang Wang"
 __license__ = "GPL 3.0"
 
 soft_info = '''
 Name:           CPAG.py
-Purpose:        Cross Phenotype Aanalysis of GWAS
+Purpose:        Cross Phenotype Analysis of GWAS
 Author:         Liuyang Wang
-Created on:     Thur May 25 2020
+Created on:     Fri Nov 10 2023
 Copyright:      (c) Liuyang Wang
 Licence:        GPL v 3.0
 '''
