@@ -618,8 +618,8 @@ def main(prog=None):
                            help="output csv file name")
     user_gwas.set_defaults(func=user_gwas_cmp)
 
-    user_gwas = root_parser.add_parser('usr-gwas-list',
-                                       help='Calculate LD-aware SNPs sharing from user multiple GWAS. Type -h for more option')
+    user_gwas = root_parser.add_parser('usr-multi-gwas',
+                                       help='Compare user's multiple GWAS. Type -h for more option')
     user_gwas.add_argument('--indir', type=str, dest="indir", default=None,
                            help="input files directory. Default: current folder")
     user_gwas.add_argument('--infiles', type=str, dest="infile", nargs='+',
