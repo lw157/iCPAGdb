@@ -80,7 +80,7 @@ conda install -c conda-forge sqlite
 
 ## Run example (Shell command)
 
-### example 1
+### Example 1
 
 Serum metabolites/xenobiotics (Shin et al. 2014) vs. Human disease 
 
@@ -98,14 +98,14 @@ python main.py post_analysis --anno-ontology --anno-cols Trait1 \
   --outfile NHGRI-p1e-05-BloodMetabolitesXenobiotic-p1e-05-EUR.csv
 ```
 
-### example 2
+### Example 2
 
 ```sh 
 python main.py cpagdb --threads 2 --subtype H2P2 --H2P2-Pcut 1e-7 \
   --lddb-pop EUR --outfile output/H2P2-p1e-07-EUR.csv
 ```
 
-### example 3 (user GWAS)
+### Example 3 (user GWAS)
 
 download COVID-19 GWAS example from "Upload and compute CPAG" page at [HERE](http://cpag.oit.duke.edu/)
 
@@ -123,5 +123,33 @@ python main.py post_analysis --anno-ontology --anno-cols Trait2 \
   --infile top_EllinghausPCs_covid19_pcut1e-5_icpagdb_out.csv \
   --outfile top_EllinghausPCs_covid19_pcut1e-5_icpagdb_out_addEFO.csv
   ```
+### Example 4 (user multiple GWAS)
+
+Compare user multiple GWAS files with LD-aware SNP sharing with a single p-value cutoff
+
+```sh 
+python main.py usr-multi-gwas --threads 10 --infile test_gwas1.txt test_gwas2.txt test_gwas3.txt \
+  --SNPcol "SNP" --delimitor "," --Pcol "P" \
+  --usr-pcut 1e-5 \
+  --outfile test_output.csv
+  ```
 
 
+Compare user multiple GWAS files with LD-aware SNP overlap with multiple p-value cutoffs
+
+```sh 
+python main.py usr-multi-gwas --threads 10 --infile test_gwas1.txt test_gwas2.txt test_gwas3.txt \
+  --SNPcol "SNP" --delimitor "," --Pcol "P" \
+  --usr-pcut 1e-5 1e-6 1e-7 \
+  --outfile test_output.csv
+  ```
+
+
+Compare user multiple GWAS files with LD-aware SNP overlaps, with p-value cutoff
+
+```sh 
+python main.py usr-multi-gwas --threads 10 --infile test_gwas1.txt test_gwas2.txt, test_gwas3.txt \
+  --SNPcol "SNP" --delimitor "," --Pcol "P" \
+  --usr-pcut 1e-5 1e-6 \
+  --outfile test_output.csv
+  ```
