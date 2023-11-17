@@ -109,8 +109,8 @@ def intra_trait(snpdat, ncpus = 1, ldpop="EUR", r2cut = 0.4, cross_traits = Fals
         res_f['Jaccard'] = res_f['Nshare_all']/(res_f['N1_pcut'] + res_f['N2_pcut'] - res_f['Nshare_all'])
         res_f['Sorensen'] = 2 * res_f['Nshare_all'] / (res_f['N1_pcut'] + res_f['N2_pcut'] )
 
-        print("Calculating the disease/trait similarity ...")
-        print("\tNote: Please use Jaccard index. The Chao-Sorensen and Chao-Jaccard methods are underpowered here. "
+        print("Calculating the disease/trait similarity ...\n")
+        print("Note: Please use Jaccard index. The Chao-Sorensen and Chao-Jaccard methods are underpowered here. "
               "Since each SNP present just ONCE in a trait, it makes no sense to incorporate abundance!")
         res_f["ChaoSorensen"] = res_f.apply(lambda x: cal_similarity(x), axis=1)
 
@@ -362,8 +362,8 @@ def ld_clump(idat, args):
     for file in os.listdir(os.getcwd()):
         if os.path.isfile(file) and file.startswith(os.path.basename(tmpfile)):
             try:
-                #os.remove(file)
-                continue
+                os.remove(file)
+                #continue
             except:
                 print("Error while deleting file : ", file)
 
