@@ -410,20 +410,46 @@ def user_gwaslist(args):
         sys.exit("Please define a input file with --infiles")
 
     snpdat_dict = {}; ldproxysnp_dict = {}
+    pcutoffs = []; infile_list = []
 
-    if len(args.usrpcut) > 1:
-        assert len(args.usrpcut) == len(args.infile), f" at least {len(args.usrpcut)} p cutoff should be defined to match {len(args.infile)} infiles"
-        print("SNPs are filtered using p cutoff " + ", ".join( str(x) for x in args.usrpcut ) + " separately")
-    else:
-        print("SNPs are filtered using p cutoff " + ", ".join(str(x) for x in args.usrpcut) + "")
+    if len(args.infile) > 1:
+        if len(args.infile) == 2:
+            if "," in args.infile[1]:
+                xfiles = args.infile[1].split(",")
+                infile_list.append(args.infile[0])
+                pcutoffs.append(args.usrpcut[0])
 
-    if len(args.infile) >= 2:
-        for i in range(len(args.infile)):
-            ifile = args.infile[i]
-            if len(args.usrpcut) >1:
-                ipcut = float(args.usrpcut[i])
+                for ifile in xfiles:
+                    infile_list.append(ifile.replace(" ","").replace('  ', ""))
+
+                if len(args.usrpcut) == 1:
+                    pcutoffs.extend([args.usrpcut[0] for i in range(len(xfiles)) ])
+                elif len(args.usrpcut) == 2:
+                    pcutoffs.extend([args.usrpcut[1] for i in range(len(xfiles))])
+                else:
+                    sys.exit("The p cut # is either 1 for all GWAS, or 2, or N values where N is No. of GWAS infiles.\n "
+                             "e.g.,for Two p cutoffs,you can use <--usr-infile gwas1.txt gwas2.txt, gwas3.txt,gwas4.txt --usr-pcut 1e-8 1e-5>,\n"
+                             " the 1st 1e-8 will be applied to gwas1.txt, and the 2nd pcutoff 1e-5 will be applied to gwas2.txt, gwas3.txt and gwas4.txt \n")
             else:
-                ipcut = float(args.usrpcut[0])
+                infile_list = args.infile
+                if len(args.usrpcut) == 1:
+                    pcutoffs.extend([args.usrpcut[0] for i in range(len(args.infile))])
+                else:
+                    pcutoffs.extend([args.usrpcut[i] for i in range(len(args.infile))])
+        else:
+            infile_list = args.infile
+            if len(args.usrpcut) == 1:
+                pcutoffs.extend([args.usrpcut[0] for i in range(len(args.infile))])
+            else:
+                pcutoffs.extend([args.usrpcut[i] for i in range(len(args.infile))])
+
+        assert len(pcutoffs) == len(infile_list), f"The p cut # is either 1 for all GWAS, or 2, or N values where N is No. of GWAS infiles. " \
+                                                  f"e.g., for Two p cutoffs,you can use --usr-infile gwas1.txt gwas2.txt, gwas3.txt,gwas4.txt --usr-pcut 1e-8 1e-5 ..." \
+                                                  f"the 2nd pcutoff 1e-5 will be used for gwas2.txt, gwas3.txt and gwas4.txt \n"
+
+        for i in range(len(infile_list)):
+            ifile = infile_list[i]
+            ipcut = pcutoffs[i]
 
             print(f"Working on {os.path.basename(ifile)} ...")
             fileexist = check_file(file_dir, ifile)
@@ -586,7 +612,7 @@ def main(prog=None):
     user_gwas.add_argument('--Pcol', type=str, dest="pcol", default='P',
                            help="Column name for p value")  # action='store_true')
     user_gwas.add_argument('--usr-pcut', type=float, dest="usrpcut", default=1e-5,
-                           help="p cutoff for user's GWAS. Default: 1e-5")
+                           help="p cutoff for user GWAS. Default: 1e-5")
     user_gwas.add_argument('--NHGRI-Pcut', type=float, dest="nhgri_pcut", action="store", default=5e-8,
                            help="filtering out SNPs")
     user_gwas.add_argument('--usr-pheno-name', type=str, dest="usr_phename", default="User_trait",
@@ -619,7 +645,7 @@ def main(prog=None):
     user_gwas.set_defaults(func=user_gwas_cmp)
 
     user_gwas = root_parser.add_parser('usr-multi-gwas',
-                                       help='Compare user's multiple GWAS. Type -h for more option')
+                                       help='Compare user multiple GWAS. Type -h for more option')
     user_gwas.add_argument('--indir', type=str, dest="indir", default=None,
                            help="input files directory. Default: current folder")
     user_gwas.add_argument('--infiles', type=str, dest="infile", nargs='+',
