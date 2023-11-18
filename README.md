@@ -145,10 +145,10 @@ python main.py usr-multi-gwas --threads 10 --infile test_gwas1.txt test_gwas2.tx
   ```
 
 
-Compare user multiple GWAS files with LD-aware SNP overlaps, with different p-value cutoffs. In the following example, 1e-5 for test_gwas1.txt, and 1e-6 for test_gwas2.txt and test_gwas3.txt
+Compare user multiple GWAS files with LD-aware SNP overlaps, with 1st p-cutoff for first infile, and 2nd p-cutoff for all other infiles. In the following example, 1e-5 for test_gwas1.txt, and 1e-6 for test_gwas2.txt, test_gwas3.txt and test_gwas4.txt
 
 ```sh 
-python main.py usr-multi-gwas --threads 10 --infile test_gwas1.txt test_gwas2.txt, test_gwas3.txt \
+python main.py usr-multi-gwas --threads 10 --infile test_gwas1.txt test_gwas2.txt, test_gwas3.txt,test_gwas4.txt \
   --SNPcol "SNP" --delimitor "," --Pcol "P" \
   --usr-pcut 1e-5 1e-6 \
   --outfile test_output.csv
