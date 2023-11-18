@@ -1,10 +1,10 @@
-# iCPAGdb 
+# iCPAGdb -- LD-aware SNP overlap across multiple GWAS datasets
 
 Web browser: http://cpag.oit.duke.edu/ 
 
 This repo contains both back-end and front-end codes of iCPAGdb and the web browser.
 
-iCPAGdb integrates the results of GWAS across different phenotypic scales, identifying and quantifying the significance of pleiotropic loci that impact molecular, cellular, and organismal traits. The goal is to provide a resource that allows experts on a particular human trait to easily develop hypotheses for molecular and cellular phenotypes that underlie the physiology of that trait. Molecules and cellular pathways implicated in this way could serve as novel biomarkers or targets for therapeutic approaches. Current verion of iCPAGdb contains GWAS summary statistic from >4400 diseases/traits, and allows users to explore pre-computed correlations across all existing diseases and/or upload their own GWAS to identify and explore shared SNPs between their own GWAS and >4400 diseases/traits.
+iCPAGdb integrates the results of GWAS across different phenotypic scales, identifying and quantifying the significance of pleiotropic loci that impact molecular, cellular, and organismal traits. The goal is to provide a resource that allows experts on a particular human trait to easily develop hypotheses for molecular and cellular phenotypes that underlie the physiology of that trait. Molecules and cellular pathways implicated in this way could serve as novel biomarkers or targets for therapeutic approaches. The current version of iCPAGdb contains GWAS summary statistics from >4400 diseases/traits and allows users to explore pre-computed correlations across all existing diseases and/or upload their own GWAS to identify and explore shared SNPs between their own GWAS and >4400 diseases/traits.
 
 This repo contains two parts
 1) python (3.6+) code for iCPAGdb
@@ -18,12 +18,12 @@ This repo contains two parts
 1) direct download [PLINK 1.9](https://www.cog-genomics.org/plink/1.9/), or using Linux/Max ```wget``` function  and place it to folder "plink_bins"  <br/>
 
 ```sh 
-## please choose proper PLINK version, here is an example of Linux version 
+## please choose the proper PLINK version, here is an example of the Linux version 
 
 wget http://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20201019.zip
 ```
 
-2) download ziped database file (~15Gb), and decompressed it to "db" folder from Dropbox [LINK](https://www.dropbox.com/sh/na23jflxcgk0nib/AAAoOj3gB8k8j_dNH1UBFzeZa?dl=0). The following is an example of downloading command on Linux/Mac using ```wget```.
+2) download the ziped database file (~15Gb), and decompress it to "db" folder from Dropbox [LINK](https://www.dropbox.com/sh/na23jflxcgk0nib/AAAoOj3gB8k8j_dNH1UBFzeZa?dl=0). The following is an example of downloading commands on Linux/Mac using ```wget```.
 
 ```sh 
 wget https://www.dropbox.com/sh/na23jflxcgk0nib/AAAoOj3gB8k8j_dNH1UBFzeZa\?dl=1  --content-disposition
@@ -145,7 +145,7 @@ python main.py usr-multi-gwas --threads 10 --infile test_gwas1.txt test_gwas2.tx
   ```
 
 
-Compare user multiple GWAS files with LD-aware SNP overlaps, with p-value cutoff
+Compare user multiple GWAS files with LD-aware SNP overlaps, with different p-value cutoffs. In the following example, 1e-5 for test_gwas1.txt, and 1e-6 for test_gwas2.txt and test_gwas3.txt
 
 ```sh 
 python main.py usr-multi-gwas --threads 10 --infile test_gwas1.txt test_gwas2.txt, test_gwas3.txt \
